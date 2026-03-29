@@ -1,5 +1,5 @@
 # apps/web/Dockerfile
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 COPY package*.json ./
@@ -10,7 +10,7 @@ COPY . .
 # Let Next.js build standalone
 RUN npm run build || echo "No build script yet, skipping build"
 
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV production
 
