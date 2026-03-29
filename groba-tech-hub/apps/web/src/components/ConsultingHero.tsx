@@ -13,6 +13,7 @@ export function ConsultingHero() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const imagesRef = useRef<HTMLImageElement[]>([]);
     const [loaded, setLoaded] = useState(false);
+    const loadedCountRef = useRef(0);
     
     const { scrollYProgress } = useScroll({
         target: sectionRef,
@@ -29,7 +30,7 @@ export function ConsultingHero() {
     const frameIndex = useTransform(smoothProgress, [0, 1], [1, TOTAL_FRAMES]);
     const textOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
     const textY = useTransform(smoothProgress, [0, 0.15], [0, -80]);
-    const overlayOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
+    const overlayOpacity = useTransform(smoothProgress, [0, 0.15], [0.3, 0]);
 
     useEffect(() => {
         const imgs: HTMLImageElement[] = [];
@@ -48,8 +49,9 @@ export function ConsultingHero() {
 
             img.src = `/hero-sequence/${folder}/ezgif-frame-${num}.png`;
             img.onload = () => {
-                count++;
-                if (count === TOTAL_FRAMES) {
+                loadedCountRef.current++;
+                // Show first frame immediately, don't wait for all
+                if (loadedCountRef.current === 1) {
                     imagesRef.current = imgs;
                     setLoaded(true);
                     renderFrame(1);
