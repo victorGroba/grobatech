@@ -1,20 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import NextImage from "next/image";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import * as motion from "framer-motion/client";
-import { useScroll, useTransform, useSpring, useMotionValueEvent } from "framer-motion";
-import { useEffect, useRef, useState, useCallback } from "react";
-
-const TOTAL_FRAMES = 240;
+import { useScroll, useTransform, useSpring } from "framer-motion";
+import { useRef } from "react";
 
 export function ConsultingHero() {
     const sectionRef = useRef<HTMLElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const imagesRef = useRef<HTMLImageElement[]>([]);
-    const [loaded, setLoaded] = useState(false);
-    const loadedCountRef = useRef(0);
     
     const { scrollYProgress } = useScroll({
         target: sectionRef,
@@ -28,110 +21,10 @@ export function ConsultingHero() {
         restDelta: 0.0005
     });
 
-    const frameIndex = useTransform(smoothProgress, [0, 1], [1, TOTAL_FRAMES]);
     const textOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
     const textY = useTransform(smoothProgress, [0, 0.15], [0, -80]);
-    const overlayOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
-    const heroImageOpacity = useTransform(smoothProgress, [0, 0.08], [1, 0]);
-    const heroImageScale = useTransform(smoothProgress, [0, 0.08], [1, 1.05]);
-
-    useEffect(() => {
-        const imgs: HTMLImageElement[] = [];
-        let count = 0;
-        
-        for (let i = 1; i <= TOTAL_FRAMES; i++) {
-            const img = new Image();
-            const num = i.toString().padStart(3, '0');
-            
-            let folder = "0-50";
-            if (i <= 50) folder = "0-50";
-            else if (i <= 100) folder = "51-100";
-            else if (i <= 150) folder = "101-150";
-            else if (i <= 200) folder = "151-200";
-            else folder = "201-final";
-
-            img.src = `/hero-sequence/${folder}/ezgif-frame-${num}.png`;
-            img.onload = () => {
-                loadedCountRef.current++;
-                // Show first frame immediately, don't wait for all
-                if (loadedCountRef.current === 1) {
-                    imagesRef.current = imgs;
-                    setLoaded(true);
-                    renderFrame(1);
-                }
-            };
-            imgs.push(img);
-        }
-    }, []);
-
-    const renderFrame = useCallback((val: number) => {
-        const canvas = canvasRef.current;
-        const images = imagesRef.current;
-        if (!canvas || images.length === 0) return;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-
-        const dpr = window.devicePixelRatio || 1;
-        const w = canvas.clientWidth;
-        const h = canvas.clientHeight;
-        
-        if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-            canvas.width = w * dpr;
-            canvas.height = h * dpr;
-            ctx.scale(dpr, dpr);
-        }
-
-        const clamped = Math.max(1, Math.min(TOTAL_FRAMES, val));
-        const idx1 = Math.floor(clamped) - 1;
-        const idx2 = Math.min(TOTAL_FRAMES - 1, idx1 + 1);
-        const frac = clamped - Math.floor(clamped);
-
-        const img1 = images[idx1];
-        if (!img1 || !img1.complete) return;
-
-        const iw = img1.width;
-        const ih = img1.height;
-        const ratio = Math.max(w / iw, h / ih);
-        const dx = (w - iw * ratio) / 2;
-        const dy = (h - ih * ratio) / 2;
-
-        ctx.clearRect(0, 0, w, h);
-        ctx.globalAlpha = 1;
-        ctx.drawImage(img1, 0, 0, iw, ih, dx, dy, iw * ratio, ih * ratio);
-
-        const img2 = images[idx2];
-        if (img2 && img2.complete && frac > 0.01) {
-            ctx.globalAlpha = frac;
-            ctx.drawImage(img2, 0, 0, iw, ih, dx, dy, iw * ratio, ih * ratio);
-        }
-        ctx.globalAlpha = 1;
-    }, []);
-
-    useMotionValueEvent(frameIndex, "change", (latest) => {
-        if (loaded) {
-            renderFrame(latest);
-        }
-    });
-
-    useEffect(() => {
-        const onResize = () => {
-            if (loaded) {
-                const canvas = canvasRef.current;
-                if (canvas) {
-                    const ctx = canvas.getContext("2d");
-                    if (ctx) {
-                        const dpr = window.devicePixelRatio || 1;
-                        canvas.width = canvas.clientWidth * dpr;
-                        canvas.height = canvas.clientHeight * dpr;
-                        ctx.scale(dpr, dpr);
-                    }
-                }
-                renderFrame(frameIndex.get());
-            }
-        };
-        window.addEventListener('resize', onResize);
-        return () => window.removeEventListener('resize', onResize);
-    }, [loaded, frameIndex, renderFrame]);
+    const overlayOpacity = useTransform(smoothProgress, [0, 0.15], [0.7, 0]);
+    const videoScale = useTransform(smoothProgress, [0, 0.3], [1.05, 1]);
 
     return (
         <section 
@@ -141,31 +34,22 @@ export function ConsultingHero() {
         >
             <div className="sticky top-0 w-full h-screen overflow-hidden">
                 
-                <canvas 
-                    ref={canvasRef}
-                    className="absolute inset-0 w-full h-full"
-                    style={{ display: 'block' }}
-                />
-
-                {/* Static hero cover image - visible on load, fades on scroll */}
-                <motion.div
-                    style={{ opacity: heroImageOpacity, scale: heroImageScale }}
-                    className="absolute inset-0 z-[1] pointer-events-none"
-                >
-                    <NextImage
-                        src="/assets/hero-cover.jpg"
-                        alt="Groba Tech - Consultoria em TI"
-                        fill
-                        priority
-                        className="object-cover"
-                        sizes="100vw"
+                {/* Video background - autoplay loop */}
+                <motion.div style={{ scale: videoScale }} className="absolute inset-0">
+                    <video 
+                        src="/assets/videos/Logo_internal_system_202603291538.mp4"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="auto"
+                        className="absolute inset-0 w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#05050A] via-[#05050A]/70 to-transparent" />
                 </motion.div>
 
                 <motion.div 
                     style={{ opacity: overlayOpacity }}
-                    className="absolute inset-0 bg-[#05050A]/60 z-[1] pointer-events-none" 
+                    className="absolute inset-0 bg-[#05050A] z-[1] pointer-events-none" 
                 />
                 
                 <div className="absolute inset-0 bg-[#05050A]/20 z-[1] pointer-events-none" />
@@ -175,7 +59,7 @@ export function ConsultingHero() {
                     style={{ opacity: textOpacity, y: textY }}
                     className="absolute inset-0 z-[2] flex items-center bg-gradient-to-r from-[#05050A] to-transparent"
                 >
-                     <div className="container mx-auto px-6 max-w-[1200px]">
+                    <div className="container mx-auto px-6 max-w-[1200px]">
                         <div className="max-w-2xl">
                             <div className="py-6 sm:py-8">
                                 <motion.div
