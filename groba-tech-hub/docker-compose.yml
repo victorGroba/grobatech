@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: groba_api
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mantém o banco de dados persistindo fora do container
+      - ./apps/api/local_db.sqlite3:/app/local_db.sqlite3
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: groba_web
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    environment:
+      - NODE_ENV=production
