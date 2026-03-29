@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NextImage from "next/image";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import * as motion from "framer-motion/client";
 import { useScroll, useTransform, useSpring, useMotionValueEvent } from "framer-motion";
@@ -30,7 +31,9 @@ export function ConsultingHero() {
     const frameIndex = useTransform(smoothProgress, [0, 1], [1, TOTAL_FRAMES]);
     const textOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
     const textY = useTransform(smoothProgress, [0, 0.15], [0, -80]);
-    const overlayOpacity = useTransform(smoothProgress, [0, 0.15], [0.3, 0]);
+    const overlayOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
+    const heroImageOpacity = useTransform(smoothProgress, [0, 0.08], [1, 0]);
+    const heroImageScale = useTransform(smoothProgress, [0, 0.08], [1, 1.05]);
 
     useEffect(() => {
         const imgs: HTMLImageElement[] = [];
@@ -144,9 +147,25 @@ export function ConsultingHero() {
                     style={{ display: 'block' }}
                 />
 
+                {/* Static hero cover image - visible on load, fades on scroll */}
+                <motion.div
+                    style={{ opacity: heroImageOpacity, scale: heroImageScale }}
+                    className="absolute inset-0 z-[1] pointer-events-none"
+                >
+                    <NextImage
+                        src="/assets/hero-cover.jpg"
+                        alt="Groba Tech - Consultoria em TI"
+                        fill
+                        priority
+                        className="object-cover"
+                        sizes="100vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#05050A] via-[#05050A]/70 to-transparent" />
+                </motion.div>
+
                 <motion.div 
                     style={{ opacity: overlayOpacity }}
-                    className="absolute inset-0 bg-[#05050A] z-[1] pointer-events-none" 
+                    className="absolute inset-0 bg-[#05050A]/60 z-[1] pointer-events-none" 
                 />
                 
                 <div className="absolute inset-0 bg-[#05050A]/20 z-[1] pointer-events-none" />
